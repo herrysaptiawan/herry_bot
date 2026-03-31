@@ -141,6 +141,7 @@ loss_counter = 0   # hitung loss berturut-turut
 is_down = False    # status koneksi saat ini (down/up)
 
 # ================= TELEGRAM =================
+send_telegram("🚀 BOT AKTIF")
 def send_telegram(message, image_path=None, parse_mode=None):
     try:
         if not CHAT_ID:
