@@ -2,13 +2,17 @@ import asyncio
 import os
 import socket
 from telegram.ext import ApplicationBuilder
+import nest_asyncio
+
+# Terapkan nest_asyncio supaya bisa jalan di Railway / container
+nest_asyncio.apply()
 
 # Ambil TOKEN dan CHAT_ID dari environment variables
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 if not TOKEN or not CHAT_ID:
-    raise ValueError("TELEGRAM_TOKEN and CHAT_ID harus di-set di environment variables")
+    raise ValueError("TELEGRAM_TOKEN dan CHAT_ID harus di-set di environment variables")
 
 # Variabel global untuk menyimpan status terakhir
 last_status = None
@@ -25,7 +29,7 @@ async def check_connection():
             return True
         except (socket.timeout, socket.error):
             if attempt == 0:
-                await asyncio.sleep(1)  # Tunggu sebentar sebelum retry
+                await asyncio.sleep(1)
                 continue
             return False
 
@@ -63,7 +67,7 @@ async def monitor_internet(bot):
         except Exception as e:
             print(f"[ERROR] Monitoring gagal: {e}")
 
-        await asyncio.sleep(30)  # Delay 30 detik sebelum cek berikutnya
+        await asyncio.sleep(30)
 
 async def main():
     """
@@ -75,8 +79,11 @@ async def main():
     # Jalankan monitoring sebagai background task
     asyncio.create_task(monitor_internet(application.bot))
 
-    # Jalankan polling agar bot bisa aktif di Telegram
+    # Jalankan polling agar bot aktif di Telegram
     await application.run_polling()
 
+# Jalankan bot tanpa asyncio.run() untuk menghindari RuntimeError di Railway
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
+    loop.run_forever()
